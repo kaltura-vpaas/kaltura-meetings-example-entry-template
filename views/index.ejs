@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+
+<body>
+  <h1>
+    Get Your Question Answered Live:
+  </h1>
+  <form target="_blank" method="POST" action="/event">
+    <label for="firstName">First Name<input type="text" name="firstName"></label>
+    <label for="lastName">Last Name<input type="text" name="lastName"></label>
+    <br>
+    <label for="email">Email<input type="text" name="email"></label>
+    <br>
+    <label for="question">Question<input type="text" size="80" name="question"></label>
+    <br>
+    <input type="submit">
+  </form>
+  <%=sched%>
+</body>
+
+</html>

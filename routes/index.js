@@ -19,7 +19,7 @@ router.get('/', async function (req, res, next) {
   let room = await createRoom(adminKs, "Room Topic");
 
   //create mediaentry as template
-  let media = await addMedia(adminKs, "The tag");
+  let media = await addMedia(adminKs, "The name");
 
   //create schedule event
   let now = Math.floor(Date.now() / 1000);

@@ -1,9 +1,15 @@
 # Summary
 This project is a proof of concept to show you how to programmatically use a template to supply metadata like Name, Tags, Category etc for the recording of a Kaltura Meeting.
 
+
+
+# Live Demo
+
+https://kaltura-meetings-example-entry.herokuapp.com/
+
 # Video Walkthrough:
 
-
+http://www.kaltura.com/tiny/vvxmy
 
 # Prerequisites
 

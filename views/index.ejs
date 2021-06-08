@@ -2,24 +2,19 @@
 <html>
 
 <head>
-  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <link rel='stylesheet' href='/stylesheets/kaltura-theme.css' />
 </head>
 
 <body>
-  <h1>
-    Get Your Question Answered Live:
-  </h1>
-  <form target="_blank" method="POST" action="/event">
-    <label for="firstName">First Name<input type="text" name="firstName"></label>
-    <label for="lastName">Last Name<input type="text" name="lastName"></label>
-    <br>
-    <label for="email">Email<input type="text" name="email"></label>
-    <br>
-    <label for="question">Question<input type="text" size="80" name="question"></label>
-    <br>
-    <input type="submit">
-  </form>
-  <%=sched%>
+  <h2 style="text-align:center; margin-top: 10px;">
+    Using an entry as a template for Kaltura Meetings Recording:
+  </h2>
+  <ol>
+    <li>Start a meeting: <a href="<%=adminUrl%>">Here</a></li>
+    <li>Record the meeting</li>
+    <li>Verify in the KMC</li>
+  </ol>
+
 </body>
 
 </html>

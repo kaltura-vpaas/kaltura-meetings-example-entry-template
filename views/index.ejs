@@ -3,9 +3,24 @@
 
 <head>
   <link rel='stylesheet' href='/stylesheets/kaltura-theme.css' />
+  <style>
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+
+    div.scrollable {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: scroll;
+    }
+  </style>
 </head>
 
-<body style="font-size: 250%;">
+<body style="font-size: 100%;">
   <h2 style="text-align:center; margin-top: 10px;">
     Using an entry as a template for Kaltura Meetings Recording:
   </h2>
@@ -13,11 +28,13 @@
     <li>Start a meeting: <a href="<%=adminUrl%>">Here</a></li>
     <li>Record the meeting</li>
     <li>Verify in the <a href="https://kmc.kaltura.com/index.php/kmcng/content/entries/list">KMC</a>
-    that "The name" has been applied to your recording as per this
-  <a href="https://github.com/kaltura-vpaas/kaltura-meetings-example-entry-template/blob/main/routes/index.js#L22">
-  This code</a>
- </li>
+      that "The name" has been applied to your recording as per this
+      <a href="https://github.com/kaltura-vpaas/kaltura-meetings-example-entry-template/blob/main/routes/index.js#L22">
+        This code</a>
+        <li>You can also compare the two entries via the auto-refreshing iframe below</li>
+    </li>
   </ol>
+<iframe style="border: none;height: 100%;width: 100%;position: absolute;" src="/check?entryId=<%=entryId%>"></iframe>
 
 </body>
 

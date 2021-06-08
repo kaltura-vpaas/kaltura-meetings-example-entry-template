@@ -1,99 +1,117 @@
-# Minimal Virtual Room
+# Summary
+This project is a proof of concept to show you how to programmatically use a template to supply metadata like Name, Tags, Category etc for the recording of a Kaltura Meeting.
 
-This is a minimal web app to demonstrate in as few steps as possible the Kaltura/NewRow virtual meeting API . This example leverages the easy-to-use [Virtual Meeting Room API](https://github.com/kaltura-vpaas/virtual-meeting-rooms) to host the meeting on the Kaltura platform.
+# Video Walkthrough:
 
-## Getting Started
 
-### Video Walkthrough:
 
-[http://www.kaltura.com/tiny/w86qx](http://www.kaltura.com/tiny/w86qx)
-
-### Prerequisites
+# Prerequisites
 
 1. [Nodejs](https://nodejs.org/en/) 
 2. [Kaltura VPaaS account](https://corp.kaltura.com/video-paas/registration?utm_campaign=Meetabout&utm_medium=affiliates&utm_source=GitHub). Once you've opened an account, send an email to <VPaaS@kaltura.com> to activate Meetings.
 
-### Install and Run
+# How to Run
+1. Copy env.template to .env and fill in your information
+2. run npm install
+3. npm run dev for developement
+4. npm start for production
 
-1. Clone the github repo: https://github.com/kaltura-vpaas/minimal-virtual-room-nodejs
-2. Run `npm install`
-3. Copy `.env.template` to `.env` and populate the following required fields (other fields in the file are not required to run this app):
+# Documentation
 
-```env
-KALTURA_SERVICE_URL=https://www.kaltura.com 
-KALTURA_ADMIN_SECRET= #obtained from https://kmc.kaltura.com/index.php/kmcng/settings/integrationSettings 
-KALTURA_PARTNER_ID=#obtained from https://kmc.kaltura.com/index.php/kmcng/settings/integrationSettings 
-KALTURA_USER_ID=#set it to the Kaltura user designated as admin. This is usually the email address you used to create your Kaltura account 
-```
-
-4. Run the app: `npm start`
-
-   
-
-## A Meeting!
-
-## <img src="assets/images/minimal/newrow_room.png" alt="newrow_room" style="zoom:35%;" />
-
-### Setting Up a Meeting: Beneath the Hood
-
-A Kaltura virtual meeting room is created and joined through a series of API calls, described in detail in the [integration guide](https://github.com/kaltura-vpaas/virtual-meeting-rooms). The [Virtual Room Manager App](https://github.com/kaltura-vpaas/liveroom_manager) is another helpful tool to understand its usage.
-
-Now, let's walk through the Meetings API
-
-To create a new meeting, look at the `POST` handler in `/routes/index.js` which calls the `createRoom` function in [/lib/createroom.js](https://github.com/kaltura-vpaas/meetabout/blob/master/lib/createroom.js):
+To start a meeting, the code from [kaltura-nodejs-template](https://github.com/kaltura-vpaas/kaltura-nodejs-template)  was copied into this project, and you can refer to [Kaltura Meetings Integration Guide](https://github.com/kaltura-vpaas/virtual-meeting-rooms ) for a comprehensive guide to the Meetings API. 
 
 ```javascript
- createRoom(topicName, function (kalturaResponse) {
+  //create room aka resource
+  let room = await createRoom(adminKs, "Room Topic");
 ```
 
-`kaltura.services.session.start` creates a [Kaltura Admin Session](https://github.com/kaltura-vpaas/virtual-meeting-rooms#creating-an-admin-session) which is needed to [create the virtual room](https://github.com/kaltura-vpaas/virtual-meeting-rooms#creating-a-resource):
+The room is created in [createRoom.js](https://github.com/kaltura-vpaas/kaltura-meetings-example-entry-template/blob/main/lib/createRoom.js)
+
+Take note of the `custom_rec_auto_start:1` parameter being used to automatically start recordings when the meeting starts. You can learn about other parameters for Kaltura Meetings at [Kaltura Meetings Integration Guide](https://github.com/kaltura-vpaas/virtual-meeting-rooms )
+
+Next, a [mediaEntry](https://developer.kaltura.com/console/service/media) is created as the template. Almost all meta data from this template will be applied to the recording. 
 
 ```javascript
-// Create the virtual room
-let scheduleResource = new kaltura.objects.LocationScheduleResource();
-scheduleResource.name = topicName;
-scheduleResource.tags = "vcprovider:newrow";
-
-kaltura.services.scheduleResource.add(scheduleResource)
-.execute(client)
+  //create mediaEntry as template
+  let media = await addMedia(adminKs, "The name");
 ```
 
-The call to `kaltura.services.scheduleResource.add(scheduleResource)` creates a `resource`, which is Kaltura's terminology for a virtual room. The resource has an ID which is then passed to `joinRoom`
+In this example, only the name field is being assigned, however almost all metadata will be applied from the template, like Tags, Category, etc, you can take a look at [mediaEntry.add](https://developer.kaltura.com/console/service/media/action/add) for a full list of meta data available. 
+
+Next, an event is created starting now, and going 3 hours into the future.
 
 ```javascript
-/* POST */
-router.post('/', function (req, res, next) {
-  createRoom("A Room Name", function (kalturaResponse) {
-    console.log("creating room");
-    joinRoom(kalturaResponse.id,
-      req.body.firstName,
-      req.body.lastName,
-      req.body.email, function (joinLink) {
-        res.redirect(joinLink);
-      });
+  //create schedule event
+  let now = Math.floor(Date.now() / 1000);
+  let end = now + 10800;
+  let event = await scheduleEvent(adminKs, "Event Topic", now, end, media.id);
+```
+
+And `media.id` is passed into the event creation in [scheduleEvent.js](https://github.com/kaltura-vpaas/kaltura-meetings-example-entry-template/blob/main/lib/scheduleEvent.js) which is a wrapper for the [scheduleEvent.add](https://developer.kaltura.com/console/service/scheduleEvent/action/add
+ ) API call. 
+
+```javascript
+async function scheduleEvent(adminKs, topicName, start, end, templateEntryId) {
+  const client = await KalturaClientFactory.getClient(adminKs);
+  let scheduleEvent = new kaltura.objects.RecordScheduleEvent();
+  scheduleEvent.startDate = start;
+  scheduleEvent.endDate = end;
+  scheduleEvent.summary = topicName;
+  scheduleEvent.recurrenceType = kaltura.enums.ScheduleEventRecurrenceType.NONE;
+  scheduleEvent.templateEntryId = templateEntryId
+ 
+  // *** https://developer.kaltura.com/console/service/scheduleEvent/action/add
+  return kaltura.services.scheduleEvent.add(scheduleEvent)
+```
+
+While it is not required to schedule an event in order to host a Kaltura Meeting, the only way to apply a template to a recording is via `scheduleEvent.add`  and since this event is schedule to start now, effectively, this technique can be used for adhoc, on-the-fly meetings as well. 
+
+As you see, the `id` of the `mediaEntry` that was created previously is passed into `scheduleEvent` and used as the `templateEntryId` 
+
+Now in `index.js`  the `room`, `mediaEntry` template and `event` have been created, next:
+
+```javascript
+  //associate room with event
+  await scheduleEventResource(adminKs, event.id, room.id);
+
+  let adminRoom = await joinRoom(event.id, null,
+    true,
+    "Admin Name",
+    "Admin Last Name",
+    "admin@admin.admin");
+```
+
+The room is associated with the event via [scheduleEventResource](https://developer.kaltura.com/console/service/scheduleEventResource/action/add
+ ) and finally, a url for the admin to join the event is created and passed to [index.ejs](https://github.com/kaltura-vpaas/kaltura-meetings-example-entry-template/blob/main/views/index.ejs)
+
+```javascript
+  res.render('index', {
+    adminUrl:adminRoom
   });
-});
 ```
 
-The virtual meeting room has now been created and is ready to be used!
+At this point, the user would start a meeting, record it, stop the recording and finally, the recording would be available in your [KMC](https://kmc.kaltura.com/index.php/kmcng/content/entries/list) with the metadata from your template, in this case its name would be "The name"
 
-### Joining the Virtual Meeting Room
+# How you can help (guidelines for contributors) 
 
-Some preparation is needed to join the `resource` or virtual meeting room. The room needs to know your identity and your user type. Kaltura can designate meeting users as either admins or viewers and you can reference https://github.com/kaltura-vpaas/liveroom_manager for a more in depth example differentiating the user types.
+Thank you for helping Kaltura grow! If you'd like to contribute please follow these steps:
+* Use the repository issues tracker to report bugs or feature requests
+* Read [Contributing Code to the Kaltura Platform](https://github.com/kaltura/platform-install-packages/blob/master/doc/Contributing-to-the-Kaltura-Platform.md)
+* Sign the [Kaltura Contributor License Agreement](https://agentcontribs.kaltura.org/)
 
-In order to identify a user to the room, we need to create a [Kaltura Session](https://github.com/kaltura-vpaas/virtual-meeting-rooms#creating-a-kaltura-session) with some metadata related to the Virtual Meeting Room API.
+# Where to get help
+* Join the [Kaltura Community Forums](https://forum.kaltura.org/) to ask questions or start discussions
+* Read the [Code of conduct](https://forum.kaltura.org/faq) and be patient and respectful
 
-`  joinRoom(kalturaResponse.id, user.name, user.email, function (joinLink) {`
+# Get in touch
+You can learn more about Kaltura and start a free trial at: http://corp.kaltura.com    
+Contact us via Twitter [@Kaltura](https://twitter.com/Kaltura) or email: community@kaltura.com  
+We'd love to hear from you!
 
-This then calls [/lib/joinroom.js](/lib/joinroom.js) to create a [Kaltura Session](https://github.com/kaltura-vpaas/virtual-meeting-rooms#creating-a-kaltura-session) and authenticates the user that clicked the "Join Meeting" button.
+# License and Copyright Information
+All code in this project is released under the [AGPLv3 license](http://www.gnu.org/licenses/agpl-3.0.html) unless a different license for a particular library is specified in the applicable library path.   
 
-The URL scheme for the room follows the [convention for virtual meeting rooms](https://github.com/kaltura-vpaas/virtual-meeting-rooms#creating-the-virtual-meeting-room-url) and is created in [/lib/joinroom.js](/lib/joinroom.js):
+Copyright © Kaltura Inc. All rights reserved.   
+Authors and contributors: See [GitHub contributors list](https://github.com/kaltura/YOURREPONAME/graphs/contributors).  
 
-```javascript
-let roomUrl = "https://" + partnerId + ".kaf.kaltura.com/virtualEvent/launch?ks=" + result;
-```
-
-The `ks` is a string representing the `Kaltura Session` for the user for this meeting room. And the `partnerId` is your Kaltura VPaaS account's partner ID. 
-
-And that is it! The URL is ready to use to join the room! It is passed back to the meeting webpage and into the *href* of the "Join Meeting" button!  
-And btw, you can also embed this link in an iframe or an email or anywhere you would like to integrate a live meeting!
+### Open Source Libraries Used

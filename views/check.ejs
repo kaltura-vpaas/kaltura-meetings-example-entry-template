@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="refresh" content="5">
+  <link rel='stylesheet' href='/stylesheets/kaltura-theme.css' />
+  <style>
+    table,
+    th,
+    td {
+      border: 1px solid black;
+    }
+
+    div.scrollable {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: scroll;
+    }
+  </style>
+</head>
+
+<body style="font-size: 100%;">
+Time: <%= time %><br>
+API Results via: <a href="https://developer.kaltura.com/console/service/media/action/get">media.get</a>
+  <table style="margin:auto;table-layout: fixed;width: 100%;">
+    <th>The Template</th>
+    <th>The Recording</th>
+    <tr>
+      <td>
+        <div class="scrollable">
+          <pre><%=template%></pre>
+        </div>
+      </td>
+      <td>
+        <div class="scrollable">
+          <pre><%=recording%></pre>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
